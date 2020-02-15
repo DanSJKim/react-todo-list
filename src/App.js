@@ -5,27 +5,22 @@ import Header from './components/layout/Header';
 import AddTodo from './components/AddTodo';
 import About from './components/pages/About';
 import uuid from 'uuid';
+import axios from 'axios';
+
+import './App.css';
 
 class App extends Component {
 
-  state = {
-    todos: [
-      {
-        id: uuid.v4(),
-        title: 'Take out the trash',
-        completed: false
-      },
-      {
-        id: uuid.v4(),
-        title: 'Dinner with wife',
-        completed: true
-      },
-      {
-        id: uuid.v4(), 
-        title: 'Meeting with boss',
-        completed: false
-      }
-    ]
+  state = { 
+    todos: []
+  }
+
+  componentDidMount() {
+    console.log('componentDidMount');
+
+    // HTTP 통신으로 JSON 데이터 받아오기
+    axios.get('https://jsonplaceholder.typicode.com/todos?_limit=10')
+      .then(res => this.setState({ todos: res.data }))
   }
 
   // Toggle Complete
@@ -40,17 +35,36 @@ class App extends Component {
 
   // Delete Todo
   delTodo = (id) => {
-    this.setState({ todos: [...this.state.todos.filter(todo => todo.id !== id)] }); 
+    console.log('delTodo id: ', `${id}`);
+    axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`)
+      .then(res => {
+        this.setState({
+        todos: [...this.state.todos.filter(todo => todo.id !== id)] 
+      })});
+
+      // this.setState({
+      //   todos: [...this.state.todos.filter(todo => todo.id !== id)] 
+      // });
+    
   }
 
   // Add Todo
   addTodo = (title) => {
-    const newTodo = {
-      id: uuid.v4(),
-      title, // ES6
-      complted: false
-    }
-    this.setState({ todos: [...this.state.todos, newTodo] });
+    console.log(title);
+    // const newTodo = {
+    //   id: uuid.v4(),
+    //   title, // ES6
+    //   complted: false
+    // }
+    axios.post('https://jsonplaceholder.typicode.com/todos', {
+      title, // title: title
+      completed: false
+    })
+      .then(res => {
+        console.log('add res: ', res.data);
+        res.data.id = uuid.v4();
+        this.setState({ todos: [...this.state.todos, res.data] });
+      });
   }
 
 
@@ -63,12 +77,13 @@ class App extends Component {
             <Route exact path="/" render={props => (
               <React.Fragment>
                 <AddTodo addTodo={this.addTodo} />
-                <Todos todos={this.state.todos} markComplete={this.markComplete} delTodo={this.delTodo}/>
+                <Todos 
+                  todos={this.state.todos} 
+                  markComplete={this.markComplete} 
+                  delTodo={this.delTodo}/>
               </React.Fragment>  
             )} />
-            
             <Route path="/about" component={About} />
-            
           </div>
         </div>
       </Router>
